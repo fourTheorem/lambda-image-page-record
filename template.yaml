@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Webpage Video Capture using Container Image support for AWS Lambda
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Bucket name for video captures
+
+Globals:
+  Function:
+    Environment:
+      Variables:
+        BUCKET_NAME: !Ref BucketName
+
+Resources:
+  CapturePage:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Find existing resources and create or update CloudWatch alarms, metrics and dashboards
+      CodeUri: app/
+      Handler: handler.handleEvent
+      Runtime: nodejs12.x
+      Timeout: 60
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource:
+              - !Join [':', ['arn', 'aws', 's3', '', '', {"Fn::Join", [ '/', [{ "Ref": "BucketName" }, "capture", "*" ] ]}]]
+
+  CapturePageLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CapturePage}
+      RetentionInDays: 7
+

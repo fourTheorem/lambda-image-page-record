@@ -1,0 +1,6 @@
+data/*
+.DS_Store
+*.sw?
+node_modules/
+.aws-sam/
+samconfig.toml
