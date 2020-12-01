@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ECR Repository for Page Capture
+Resources:
+  PageCaptureRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: page-capture
+      RepositoryPolicyText: |
+        {
+         "Statement": [
+          {
+           "Effect": "Allow",
+           "Principal": {
+            "Service": "lambda.amazonaws.com"
+           },
+           "Action": [
+            "ecr:BatchGetImage",
+            "ecr:GetDownloadUrlForLayer"
+           ]
+          }
+         ]
+        }

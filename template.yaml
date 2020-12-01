@@ -24,7 +24,6 @@ Resources:
       Description: Capture a video of a webpage loading and upload to S3
       PackageType: Image
       ImageUri: !Ref ImageUri
-      Handler: handler.handleEvent
       MemorySize: 2048
       Timeout: 60
       Policies:
