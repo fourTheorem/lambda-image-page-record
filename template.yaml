@@ -7,6 +7,9 @@ Parameters:
   BucketName:
     Type: String
     Description: Bucket name for video captures
+  ImageUri:
+    Type: String
+    Description: Lambda container image repository URI
 
 Globals:
   Function:
@@ -18,10 +21,11 @@ Resources:
   CapturePage:
     Type: AWS::Serverless::Function
     Properties:
-      Description: Find existing resources and create or update CloudWatch alarms, metrics and dashboards
-      CodeUri: app/
+      Description: Capture a video of a webpage loading and upload to S3
+      PackageType: Image
+      ImageUri: !Ref ImageUri
       Handler: handler.handleEvent
-      Runtime: nodejs12.x
+      MemorySize: 2048
       Timeout: 60
       Policies:
         - Statement:
@@ -29,7 +33,16 @@ Resources:
             Action:
               - s3:PutObject
             Resource:
-              - !Join [':', ['arn', 'aws', 's3', '', '', {"Fn::Join", [ '/', [{ "Ref": "BucketName" }, "capture", "*" ] ]}]]
+              - Fn::Join:
+                - ':'
+                - - 'arn'
+                  - 'aws'
+                  - 's3::'
+                  - Fn::Join:
+                    - '/'
+                    - - !Ref BucketName
+                      - 'capture'
+                      - '*'
 
   CapturePageLogGroup:
     Type: AWS::Logs::LogGroup
@@ -37,4 +50,3 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/lambda/${CapturePage}
       RetentionInDays: 7
-
