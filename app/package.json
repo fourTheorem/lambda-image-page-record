@@ -11,9 +11,10 @@
   "license": "ISC",
   "dependencies": {
     "@middy/core": "^1.4.0",
+    "chrome-launcher": "^0.13.4",
+    "chrome-remote-interface": "^0.28.2",
     "lambda-logger-middleware": "^1.0.3",
     "pino": "^6.7.0",
-    "selenium-webdriver": "^4.0.0-alpha.7",
     "xvfb": "^0.4.0"
   },
   "devDependencies": {

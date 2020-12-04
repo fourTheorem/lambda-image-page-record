@@ -6,8 +6,8 @@ const loggerMiddleware = require('lambda-logger-middleware')
 const log = require('./log')
 const pageRecorder = require('./page-recorder')
 
-const handleEvent = middy(function ({ url }) {
-  return pageRecorder.record(url)
+const handleEvent = middy(async function ({ url }) {
+  await pageRecorder.record(url)
 }).use(loggerMiddleware({ logger: log }))
 
 module.exports = {
