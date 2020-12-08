@@ -1,7 +1,9 @@
 STACK_NAME = page-capture
 ACCOUNT_ID = $(shell aws sts get-caller-identity --query Account --output text)
 REPOSITORY_URI = $(ACCOUNT_ID).dkr.ecr.$(REGION).amazonaws.com/$(STACK_NAME)
+IMAGE_NAME = $(STACK_NAME)
 
+CONTAINER_NAME = $(STACK_NAME)
 all: check-env create-ecr-stack push create-function-stack
 
 check-env:
@@ -13,10 +15,10 @@ ifndef BUCKET_NAME
 endif
 
 build:
-	docker build -t $(STACK_NAME) .
+	docker build -t $(IMAGE_NAME) .
 
 push: check-env build
-	docker tag $(STACK_NAME) $(REPOSITORY_URI)
+	docker tag $(IMAGE_NAME) $(REPOSITORY_URI)
 	aws ecr get-login-password --region $(REGION) | docker login --username AWS --password-stdin $(ACCOUNT_ID).dkr.ecr.$(REGION).amazonaws.com
 	docker push $(REPOSITORY_URI)
 
@@ -29,21 +31,22 @@ create-function-stack:
 
 create-ecr-stack:
 	aws cloudformation create-stack --region $(REGION) \
-			--stack-name $(STACK_NAME) \
-			--template-body file:///$(PWD)/template-ecr.yaml \
+			--stack-name $(STACK_NAME)-ecr \
+			--template-body file:///$(PWD)/cf-template-ecr.yaml \
 
-install:
+install: build
 	docker run --rm -it \
 		-v $(PWD)/app:/app \
 		--entrypoint=npm \
-		$(STACK_NAME) \
+		$(IMAGE_NAME) \
 		install
 
 bash:
 	docker run --rm -it \
 		-v $(PWD)/app:/app \
+		--name $(CONTAINER_NAME)_bash \
 		--entrypoint=/bin/bash \
-		$(STACK_NAME)
+		$(IMAGE_NAME)
 
 debug:
 	EXTRA_RUN_ARGS="-e AWS_LAMBDA_EXEC_WRAPPER=/app/debug-wrapper.sh -p 9229:9229" make run
@@ -58,5 +61,8 @@ run:
 		-e AWS_SDK_LOAD_CONFIG=1 \
 		-e AWS_PROFILE=$(AWS_PROFILE) \
 		$(EXTRA_RUN_ARGS) \
-		--rm \
-		-p 9000:8080 $(STACK_NAME) | pino-pretty -t "yyyy-mm-dd HH:MM:ss"
+		--rm -i --name $(CONTAINER_NAME) \
+		-p 9000:8080 $(IMAGE_NAME) | \
+	docker run -i --rm --name $(CONTAINER_NAME)_pino \
+		--entrypoint=node $(IMAGE_NAME) \
+		/app/node_modules/.bin/pino-pretty

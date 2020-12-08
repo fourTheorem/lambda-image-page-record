@@ -13,6 +13,7 @@ RUN curl -o ffmpeg.tar.xz https://johnvansickle.com/ffmpeg/releases/ffmpeg-relea
 RUN curl -o chrome.rpm https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
 RUN yum install -y chrome.rpm
 
+RUN yum install -y make
 RUN mkdir /app
 WORKDIR /app
 COPY app/package*.json /app/

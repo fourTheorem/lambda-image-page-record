@@ -1,16 +1,13 @@
 'use strict'
 
-const chromeLauncher = require('chrome-launcher')
-const CDP = require('chrome-remote-interface')
+const chromium = require('chrome-aws-lambda')
 
 const log = require('./log')
 
-function browser(chromeClient) {
-  const { Page: page } = chromeClient
+function browserContext(page) {
   async function loadUrl(url) {
     log.info({ url }, 'Loading')
-    await page.navigate({ url })
-    await page.loadEventFired()
+    await page.goto(url)
   }
 
   return {
@@ -18,32 +15,19 @@ function browser(chromeClient) {
   }
 }
 
-function startBrowser() {
+async function startBrowser() {
   log.info('Starting Chrome')
-  return chromeLauncher
-    .launch({
-      chromeFlags: [
-        '--disable-crash-reporter',
-        '--disable-extensions',
-        '--disable-notifications',
-        '--disable-default-apps',
-        '--disable-translate',
-        '--no-first-run',
-        '--no-sandbox',
-        '--test-type',
-      ],
-    })
-    .then((chrome) => {
-      log.info('Initialising chrome client')
-      return CDP({ port: chrome.port })
-    })
-    .then((client) => {
-      log.info('Chrome started')
-      client.Network.enable()
-      client.Page.enable()
-      log.info('Chrome ready')
-      return browser(client)
-    })
+  const puppeteerOptions = {
+    args: chromium.args,
+    headless: false,
+    dumpio: true,
+  }
+  log.info({ puppeteerOptions }, 'Launching with Puppeteer')
+  const browser = await chromium.puppeteer.launch(puppeteerOptions)
+  log.info('Chrome started')
+  const page = await browser.newPage()
+  log.info('Chrome ready')
+  return browserContext(page)
 }
 
 module.exports = {

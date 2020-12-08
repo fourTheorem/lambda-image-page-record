@@ -7,9 +7,6 @@ Parameters:
   BucketName:
     Type: String
     Description: Bucket name for video captures
-  ImageUri:
-    Type: String
-    Description: Lambda container image repository URI
 
 Globals:
   Function:
@@ -20,12 +17,14 @@ Globals:
 Resources:
   CapturePage:
     Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
     Properties:
       Description: Capture a video of a webpage loading and upload to S3
       PackageType: Image
-      ImageUri: !Ref ImageUri
-      MemorySize: 2048
-      Timeout: 60
+      MemorySize: 4096
+      Timeout: 90
       Policies:
         - Statement:
             Effect: Allow
